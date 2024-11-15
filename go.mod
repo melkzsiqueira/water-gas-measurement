@@ -5,6 +5,7 @@ go 1.22.2
 require (
 	github.com/go-chi/jwtauth v1.2.0
 	github.com/spf13/viper v1.19.0
+	golang.org/x/crypto v0.21.0
 )
 
 require (
