@@ -21,13 +21,13 @@ func (m *Measurement) Create(measurement *entity.Measurement) error {
 
 func (m *Measurement) FindAll(page, limit int, sort string) ([]entity.Measurement, error) {
 	var measurements []entity.Measurement
-	if sort != "" && sort != "asc" && sort != "desc" {
+	if sort != "asc" && sort != "desc" {
 		sort = "asc"
 	}
-	if page != 0 {
+	if page == 0 {
 		page = 1
 	}
-	if limit != 0 {
+	if limit == 0 {
 		limit = 10
 	}
 	err := m.DB.Order("created_at " + sort).Offset((page - 1) * limit).Limit(limit).Find(&measurements).Error
