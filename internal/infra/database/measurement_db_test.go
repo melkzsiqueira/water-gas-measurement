@@ -147,3 +147,53 @@ func TestFindAllMeasurementsWhenSortIsDesc(t *testing.T) {
 	assert.Equal(t, 24, measurements[0].Value)
 	assert.Equal(t, 15, measurements[9].Value)
 }
+
+func TestFindMeasurementByID(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("could not open database: %v", err)
+	}
+	db.AutoMigrate(&entity.Measurement{})
+	measurement, err := entity.NewMeasurement(19, image, "1", "878ab991-20b0-41c3-9c78-849744e8312a")
+	assert.NoError(t, err)
+	db.Create(measurement)
+	measurementDB := NewMeasurement(db)
+	measurement, err = measurementDB.FindByID(measurement.ID.String())
+	assert.NoError(t, err)
+	assert.NotEmpty(t, measurement.ID)
+	assert.Equal(t, 19, measurement.Value)
+}
+
+func TestUpdateMeasurement(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("could not open database: %v", err)
+	}
+	db.AutoMigrate(&entity.Measurement{})
+	measurement, err := entity.NewMeasurement(19, image, "1", "878ab991-20b0-41c3-9c78-849744e8312a")
+	assert.NoError(t, err)
+	db.Create(measurement)
+	measurementDB := NewMeasurement(db)
+	measurement.Value = 20
+	err = measurementDB.Update(measurement)
+	assert.NoError(t, err)
+	measurement, err = measurementDB.FindByID(measurement.ID.String())
+	assert.NoError(t, err)
+	assert.Equal(t, 20, measurement.Value)
+}
+
+func TestDeleteMeasurementByID(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("could not open database: %v", err)
+	}
+	db.AutoMigrate(&entity.Measurement{})
+	measurement, err := entity.NewMeasurement(19, image, "1", "878ab991-20b0-41c3-9c78-849744e8312a")
+	assert.NoError(t, err)
+	db.Create(measurement)
+	measurementDB := NewMeasurement(db)
+	err = measurementDB.Delete(measurement.ID.String())
+	assert.NoError(t, err)
+	_, err = measurementDB.FindByID(measurement.ID.String())
+	assert.Error(t, err)
+}
