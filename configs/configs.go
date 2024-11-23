@@ -11,10 +11,13 @@ type conf struct {
 	DBPort        string `mapstructure:"DB_PORT"`
 	DBUser        string `mapstructure:"DB_USER"`
 	DBPassword    string `mapstructure:"DB_PASSWORD"`
-	DBDatabase    string `mapstructure:"DB_DATABASE"`
+	DBName        string `mapstructure:"DB_NAME"`
+	DBSSLMode     string `mapstructure:"DB_SSL_MODE"`
+	DBTimezone    string `mapstructure:"DB_TIMEZONE"`
 	WebServerPort string `mapstructure:"WEB_SERVER_PORT"`
 	JWTSecret     string `mapstructure:"JWT_SECRET"`
 	JWTExpiresIn  int    `mapstructure:"JWT_EXPIRES_IN"`
+	DBDSN         string
 	TokenAuth     *jwtauth.JWTAuth
 }
 
@@ -40,6 +43,7 @@ func LoadConfig(path string) (*conf, error) {
 	}
 
 	cfg.TokenAuth = jwtauth.New("HS256", []byte(cfg.JWTSecret), nil)
+	cfg.DBDSN = "host=" + cfg.DBHost + " port=" + cfg.DBPort + " user=" + cfg.DBUser + " dbname=" + cfg.DBName + " password=" + cfg.DBPassword + " sslmode=" + cfg.DBSSLMode + " TimeZone=" + cfg.DBTimezone
 
 	return cfg, err
 }
