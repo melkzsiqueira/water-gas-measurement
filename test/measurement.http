@@ -1,0 +1,9 @@
+POST http://localhost:8000/v1/measurements
+Content-Type: application/json
+
+{
+    "value": 19,
+    "image": "aW1hZ2VfdGVzdA==",
+    "type": "1",
+    "user": "b47d6522-02ac-49ad-872d-ea50f337a9c7"
+}
