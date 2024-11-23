@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/go-chi/jwtauth v1.2.0
+	github.com/goccy/go-json v0.3.5
 	github.com/google/uuid v1.4.0
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
@@ -16,7 +17,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/goccy/go-json v0.3.5 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
