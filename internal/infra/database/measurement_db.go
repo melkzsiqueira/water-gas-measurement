@@ -15,8 +15,9 @@ func NewMeasurement(db *gorm.DB) *Measurement {
 	}
 }
 
-func (m *Measurement) Create(measurement *entity.Measurement) error {
-	return m.DB.Create(measurement).Error
+func (m *Measurement) Create(measurement *entity.Measurement) (*entity.Measurement, error) {
+	err := m.DB.Create(measurement).Error
+	return measurement, err
 }
 
 func (m *Measurement) FindAll(page, limit int, sort string) ([]entity.Measurement, error) {
@@ -34,14 +35,14 @@ func (m *Measurement) FindAll(page, limit int, sort string) ([]entity.Measuremen
 	return measurements, err
 }
 
-func (m *Measurement) FindByID(id string) (*entity.Measurement, error) {
+func (m *Measurement) FindById(id string) (*entity.Measurement, error) {
 	var measurement entity.Measurement
 	err := m.DB.First(&measurement, "id = ?", id).Error
 	return &measurement, err
 }
 
 func (m *Measurement) Update(measurement *entity.Measurement) error {
-	_, err := m.FindByID(measurement.ID.String())
+	_, err := m.FindById(measurement.ID.String())
 	if err != nil {
 		return err
 	}
@@ -49,7 +50,7 @@ func (m *Measurement) Update(measurement *entity.Measurement) error {
 }
 
 func (m *Measurement) Delete(id string) error {
-	measurement, err := m.FindByID(id)
+	measurement, err := m.FindById(id)
 	if err != nil {
 		return err
 	}
