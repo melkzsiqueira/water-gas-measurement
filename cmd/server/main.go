@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/goccy/go-json"
@@ -46,7 +47,13 @@ func NewMeasurementHandler(db database.MeasurementInterface) *MeasurementHandler
 
 func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Request) {
 	var measurement dto.CreateMeasurementInput
-	err := json.NewDecoder(r.Body).Decode(&measurement)
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = json.Unmarshal(body, &measurement)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
