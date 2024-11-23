@@ -24,7 +24,14 @@ func main() {
 	}
 	db.AutoMigrate(&entity.Measurement{}, &entity.User{})
 
-	http.ListenAndServe(":"+config.WebServerPort, nil)
+	measurementDB := database.NewMeasurement(db)
+	measurementHandler := NewMeasurementHandler(measurementDB)
+
+	http.HandleFunc("/v1/measurements", measurementHandler.CreateMeasurement)
+	err = http.ListenAndServe(":"+config.WebServerPort, nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
 type MeasurementHandler struct {
@@ -49,10 +56,17 @@ func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Re
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.MeasurementDB.Create(p)
+	createdMeasurement, err := h.MeasurementDB.Create(p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response, err := json.Marshal(createdMeasurement)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+	w.Write(response)
 }
