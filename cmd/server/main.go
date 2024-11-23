@@ -13,6 +13,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type MeasurementHandler struct {
+	MeasurementDB database.MeasurementInterface
+}
+
 func main() {
 	config, err := configs.LoadConfig(".")
 	if err != nil {
@@ -33,12 +37,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-}
 
-type MeasurementHandler struct {
-	MeasurementDB database.MeasurementInterface
 }
-
 func NewMeasurementHandler(db database.MeasurementInterface) *MeasurementHandler {
 	return &MeasurementHandler{
 		MeasurementDB: db,
