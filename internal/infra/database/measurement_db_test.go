@@ -20,9 +20,10 @@ func TestCreateNewMeasurement(t *testing.T) {
 	measurement, err := entity.NewMeasurement(19, image, "1", "878ab991-20b0-41c3-9c78-849744e8312a")
 	assert.NoError(t, err)
 	measurementDb := NewMeasurement(db)
-	err = measurementDb.Create(measurement)
+	createdMeasurement, err := measurementDb.Create(measurement)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, measurement.ID)
+	assert.Equal(t, measurement.Value, createdMeasurement.Value)
 }
 
 func TestFindAllMeasurements(t *testing.T) {
@@ -158,7 +159,7 @@ func TestFindMeasurementByID(t *testing.T) {
 	assert.NoError(t, err)
 	db.Create(measurement)
 	measurementDB := NewMeasurement(db)
-	measurement, err = measurementDB.FindByID(measurement.ID.String())
+	measurement, err = measurementDB.FindById(measurement.ID.String())
 	assert.NoError(t, err)
 	assert.NotEmpty(t, measurement.ID)
 	assert.Equal(t, 19, measurement.Value)
@@ -177,7 +178,7 @@ func TestUpdateMeasurement(t *testing.T) {
 	measurement.Value = 20
 	err = measurementDB.Update(measurement)
 	assert.NoError(t, err)
-	measurement, err = measurementDB.FindByID(measurement.ID.String())
+	measurement, err = measurementDB.FindById(measurement.ID.String())
 	assert.NoError(t, err)
 	assert.Equal(t, 20, measurement.Value)
 }
@@ -194,6 +195,6 @@ func TestDeleteMeasurementByID(t *testing.T) {
 	measurementDB := NewMeasurement(db)
 	err = measurementDB.Delete(measurement.ID.String())
 	assert.NoError(t, err)
-	_, err = measurementDB.FindByID(measurement.ID.String())
+	_, err = measurementDB.FindById(measurement.ID.String())
 	assert.Error(t, err)
 }
