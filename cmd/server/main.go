@@ -32,13 +32,14 @@ func main() {
 	measurementDB := database.NewMeasurement(db)
 	measurementHandler := NewMeasurementHandler(measurementDB)
 
-	http.HandleFunc("/v1/measurements", measurementHandler.CreateMeasurement)
-	err = http.ListenAndServe(":"+config.WebServerPort, nil)
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /v1/measurements", measurementHandler.CreateMeasurement)
+	err = http.ListenAndServe(":"+config.WebServerPort, mux)
 	if err != nil {
 		panic(err)
 	}
-
 }
+
 func NewMeasurementHandler(db database.MeasurementInterface) *MeasurementHandler {
 	return &MeasurementHandler{
 		MeasurementDB: db,
