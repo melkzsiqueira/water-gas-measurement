@@ -16,7 +16,7 @@ func NewMeasurement(db *gorm.DB) *Measurement {
 }
 
 func (m *Measurement) Create(measurement *entity.Measurement) (*entity.Measurement, error) {
-	err := m.DB.Create(measurement).Error
+	err := m.DB.Create(&measurement).Error
 	return measurement, err
 }
 
@@ -46,7 +46,7 @@ func (m *Measurement) Update(measurement *entity.Measurement) error {
 	if err != nil {
 		return err
 	}
-	return m.DB.Save(measurement).Error
+	return m.DB.Save(&measurement).Error
 }
 
 func (m *Measurement) Delete(id string) error {
