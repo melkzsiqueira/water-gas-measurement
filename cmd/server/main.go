@@ -1,21 +1,17 @@
 package main
 
 import (
-	"io"
 	"net/http"
 
-	"github.com/goccy/go-json"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/melkzsiqueira/water-gas-measurement/configs"
-	"github.com/melkzsiqueira/water-gas-measurement/internal/dto"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/entity"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/database"
+	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/webserver/handlers"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-type MeasurementHandler struct {
-	MeasurementDB database.MeasurementInterface
-}
 
 func main() {
 	config, err := configs.LoadConfig(".")
@@ -30,51 +26,18 @@ func main() {
 	db.AutoMigrate(&entity.Measurement{}, &entity.User{})
 
 	measurementDB := database.NewMeasurement(db)
-	measurementHandler := NewMeasurementHandler(measurementDB)
+	measurementHandler := handlers.NewMeasurementHandler(measurementDB)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /v1/measurements", measurementHandler.CreateMeasurement)
-	err = http.ListenAndServe(":"+config.WebServerPort, mux)
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Post("/v1/measurements", measurementHandler.CreateMeasurement)
+	r.Get("/v1/measurements", measurementHandler.GetMeasurements)
+	r.Get("/v1/measurements/{id}", measurementHandler.GetMeasurement)
+	r.Put("/v1/measurements/{id}", measurementHandler.UpdateMeasurement)
+	r.Delete("/v1/measurements/{id}", measurementHandler.DeleteMeasurement)
+
+	err = http.ListenAndServe(":"+config.WebServerPort, r)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func NewMeasurementHandler(db database.MeasurementInterface) *MeasurementHandler {
-	return &MeasurementHandler{
-		MeasurementDB: db,
-	}
-}
-
-func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Request) {
-	var measurement dto.CreateMeasurementInput
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	err = json.Unmarshal(body, &measurement)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	p, err := entity.NewMeasurement(measurement.Value, measurement.Image, measurement.Type, measurement.User)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	createdMeasurement, err := h.MeasurementDB.Create(p)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	response, err := json.Marshal(createdMeasurement)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusCreated)
-	w.Write(response)
 }
