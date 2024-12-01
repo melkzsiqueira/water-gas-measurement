@@ -15,9 +15,9 @@ func NewMeasurement(db *gorm.DB) *Measurement {
 	}
 }
 
-func (m *Measurement) Create(measurement *entity.Measurement) (*entity.Measurement, error) {
+func (m *Measurement) Create(measurement *entity.Measurement) error {
 	err := m.DB.Create(&measurement).Error
-	return measurement, err
+	return err
 }
 
 func (m *Measurement) FindAll(page, limit int, sort string) ([]entity.Measurement, error) {
