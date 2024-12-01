@@ -1,17 +1,20 @@
 package dto
 
-import (
-	"time"
-
-	"github.com/melkzsiqueira/water-gas-measurement/pkg/entity"
-)
-
 type CreateMeasurementInput struct {
-	ID        entity.ID `json:"id"`
-	Value     int       `json:"value"`
-	Image     string    `json:"image"`
-	Type      string    `json:"type"`
-	Confirmed bool      `json:"confirmed"`
-	User      string    `json:"user"`
-	CreatedAt time.Time `json:"created_at"`
+	Value     int    `json:"value"`
+	Image     string `json:"image"`
+	Type      string `json:"type"`
+	Confirmed bool   `json:"confirmed"`
+	User      string `json:"user"`
+}
+
+type CreateUserInput struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type GetTokenInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
