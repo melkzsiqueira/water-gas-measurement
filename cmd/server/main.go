@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 	"github.com/melkzsiqueira/water-gas-measurement/configs"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/entity"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/database"
@@ -29,18 +30,29 @@ func main() {
 	measurementHandler := handlers.NewMeasurementHandler(measurementDB)
 
 	userDB := database.NewUser(db)
-	userHandler := handlers.NewUserHandler(userDB, config.TokenAuth, config.JWTExpiresIn)
+	userHandler := handlers.NewUserHandler(userDB)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Post("/v1/measurements", measurementHandler.CreateMeasurement)
-	r.Get("/v1/measurements", measurementHandler.GetMeasurements)
-	r.Get("/v1/measurements/{id}", measurementHandler.GetMeasurement)
-	r.Put("/v1/measurements/{id}", measurementHandler.UpdateMeasurement)
-	r.Delete("/v1/measurements/{id}", measurementHandler.DeleteMeasurement)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.WithValue("token", config.TokenAuth))
+	r.Use(middleware.WithValue("token_expires_in", config.JWTExpiresIn))
+	r.Route("/v1", func(r chi.Router) {
+		r.Route("/measurements", func(r chi.Router) {
+			r.Use(jwtauth.Verifier(config.TokenAuth))
+			r.Use(jwtauth.Authenticator)
 
-	r.Post("/v1/users", userHandler.CreateUser)
-	r.Post("/v1/users/token", userHandler.GetToken)
+			r.Post("/", measurementHandler.CreateMeasurement)
+			r.Get("/", measurementHandler.GetMeasurements)
+			r.Get("/{id}", measurementHandler.GetMeasurement)
+			r.Put("/{id}", measurementHandler.UpdateMeasurement)
+			r.Delete("/{id}", measurementHandler.DeleteMeasurement)
+		})
+		r.Route("/users", func(r chi.Router) {
+			r.Post("/", userHandler.CreateUser)
+			r.Post("/token", userHandler.GetToken)
+		})
+	})
 
 	err = http.ListenAndServe(":"+config.WebServerPort, r)
 	if err != nil {
