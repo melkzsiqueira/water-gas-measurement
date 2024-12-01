@@ -20,10 +20,9 @@ func TestCreateNewMeasurement(t *testing.T) {
 	measurement, err := entity.NewMeasurement(19, image, "1", "878ab991-20b0-41c3-9c78-849744e8312a")
 	assert.NoError(t, err)
 	measurementDb := NewMeasurement(db)
-	createdMeasurement, err := measurementDb.Create(measurement)
+	err = measurementDb.Create(measurement)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, measurement.ID)
-	assert.Equal(t, measurement.Value, createdMeasurement.Value)
 }
 
 func TestFindAllMeasurements(t *testing.T) {
