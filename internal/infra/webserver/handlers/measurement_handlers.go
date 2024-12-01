@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/dto"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/entity"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/database"
@@ -94,7 +95,7 @@ func (h *MeasurementHandler) GetMeasurements(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *MeasurementHandler) GetMeasurement(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := chi.URLParam(r, "id")
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("id is required"))
@@ -111,7 +112,7 @@ func (h *MeasurementHandler) GetMeasurement(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *MeasurementHandler) UpdateMeasurement(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := chi.URLParam(r, "id")
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("id is required"))
@@ -150,7 +151,7 @@ func (h *MeasurementHandler) UpdateMeasurement(w http.ResponseWriter, r *http.Re
 }
 
 func (h *MeasurementHandler) DeleteMeasurement(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := chi.URLParam(r, "id")
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("id is required"))
