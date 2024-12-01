@@ -28,6 +28,9 @@ func main() {
 	measurementDB := database.NewMeasurement(db)
 	measurementHandler := handlers.NewMeasurementHandler(measurementDB)
 
+	userDB := database.NewUser(db)
+	userHandler := handlers.NewUserHandler(userDB, config.TokenAuth, config.JWTExpiresIn)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Post("/v1/measurements", measurementHandler.CreateMeasurement)
@@ -35,6 +38,9 @@ func main() {
 	r.Get("/v1/measurements/{id}", measurementHandler.GetMeasurement)
 	r.Put("/v1/measurements/{id}", measurementHandler.UpdateMeasurement)
 	r.Delete("/v1/measurements/{id}", measurementHandler.DeleteMeasurement)
+
+	r.Post("/v1/users", userHandler.CreateUser)
+	r.Post("/v1/users/token", userHandler.GetToken)
 
 	err = http.ListenAndServe(":"+config.WebServerPort, r)
 	if err != nil {
