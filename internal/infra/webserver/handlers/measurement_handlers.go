@@ -40,14 +40,14 @@ func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	createdMeasurement, err := h.MeasurementDB.Create(m)
+	err = h.MeasurementDB.Create(m)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(createdMeasurement)
+	json.NewEncoder(w).Encode(m)
 }
 
 func (h *MeasurementHandler) GetMeasurements(w http.ResponseWriter, r *http.Request) {
