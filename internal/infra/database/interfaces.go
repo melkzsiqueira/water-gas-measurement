@@ -8,7 +8,7 @@ type UserInterface interface {
 }
 
 type MeasurementInterface interface {
-	Create(measurement *entity.Measurement) error
+	Create(measurement *[]entity.Measurement) error
 	FindAll(page, limit int, sort string) ([]entity.Measurement, error)
 	FindById(id string) (*entity.Measurement, error)
 	Update(measurement *entity.Measurement) error
