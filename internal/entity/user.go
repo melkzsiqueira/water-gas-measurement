@@ -60,7 +60,7 @@ func (u *User) Validate() error {
 		return ErrEmailIsRequired
 	}
 
-	if u.Password == "" {
+	if u.ValidatePassword("") {
 		return ErrPasswordIsRequired
 	}
 
