@@ -15,8 +15,8 @@ func NewMeasurement(db *gorm.DB) *Measurement {
 	}
 }
 
-func (m *Measurement) Create(measurement *entity.Measurement) error {
-	err := m.DB.Create(&measurement).Error
+func (m *Measurement) Create(measurement *[]entity.Measurement) error {
+	err := m.DB.Create(measurement).Error
 	return err
 }
 
