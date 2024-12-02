@@ -18,3 +18,7 @@ type GetTokenInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
+
+type GetTokenOutput struct {
+	AccessToken string `json:"access_token"`
+}
