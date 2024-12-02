@@ -17,12 +17,17 @@ func TestCreateNewMeasurement(t *testing.T) {
 		t.Fatalf("could not open database: %v", err)
 	}
 	db.AutoMigrate(&entity.Measurement{})
-	measurement, err := entity.NewMeasurement(19, image, "1", "878ab991-20b0-41c3-9c78-849744e8312a")
-	assert.NoError(t, err)
+	var m []entity.Measurement
+	for range 2 {
+		measurements, err := entity.NewMeasurement(19, image, "1", "878ab991-20b0-41c3-9c78-849744e8312a")
+		assert.NoError(t, err)
+		m = append(m, *measurements)
+	}
 	measurementDb := NewMeasurement(db)
-	err = measurementDb.Create(measurement)
+	err = measurementDb.Create(&m)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, measurement.ID)
+	assert.NotEmpty(t, m[0].ID)
+	assert.NotEmpty(t, m[1].ID)
 }
 
 func TestFindAllMeasurements(t *testing.T) {
