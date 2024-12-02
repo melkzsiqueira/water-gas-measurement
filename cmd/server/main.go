@@ -7,13 +7,30 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth"
 	"github.com/melkzsiqueira/water-gas-measurement/configs"
+	_ "github.com/melkzsiqueira/water-gas-measurement/docs"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/entity"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/database"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/webserver/handlers"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+// @title           Water and Gas Measurement
+// @version         1.0
+// @description     Water and Gas Measurement API with auhtentication
+// @termsOfService	http://swagger.io/terms/
+
+// @contact.name	Melkz Siqueira
+// @contact.url		https://linkedin.com/in/melkzsiqueira
+// @contact.email	melkz.siqueira@gmail.com
+
+// @license.name	Apache-2.0 license
+// @license.url		https://github.com/melkzsiqueira/water-gas-measurement?tab=Apache-2.0-1-ov-file#
+
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in 							header
+// @name 						Authorization
 func main() {
 	config, err := configs.LoadConfig(".")
 	if err != nil {
@@ -37,7 +54,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.WithValue("token", config.TokenAuth))
 	r.Use(middleware.WithValue("token_expires_in", config.JWTExpiresIn))
-	r.Route("/v1", func(r chi.Router) {
+	r.Route("/"+config.APIVersion, func(r chi.Router) {
 		r.Route("/measurements", func(r chi.Router) {
 			r.Use(jwtauth.Verifier(config.TokenAuth))
 			r.Use(jwtauth.Authenticator)
@@ -51,6 +68,9 @@ func main() {
 		r.Route("/users", func(r chi.Router) {
 			r.Post("/", userHandler.CreateUser)
 			r.Post("/token", userHandler.GetToken)
+		})
+		r.Route("/docs", func(r chi.Router) {
+			r.Get("/*", httpSwagger.Handler(httpSwagger.URL(config.SwaggerURL)))
 		})
 	})
 
