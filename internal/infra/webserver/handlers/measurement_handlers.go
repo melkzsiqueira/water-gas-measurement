@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -10,6 +12,7 @@ import (
 	"github.com/melkzsiqueira/water-gas-measurement/internal/dto"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/entity"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/database"
+	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/gemini"
 	entityPkg "github.com/melkzsiqueira/water-gas-measurement/pkg/entity"
 )
 
@@ -36,7 +39,10 @@ func NewMeasurementHandler(db database.MeasurementInterface) *MeasurementHandler
 // @Router       		/measurements		[post]
 // @Security 			ApiKeyAuth
 func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Request) {
-	var measurements []dto.CreateMeasurementInput
+	var measurement dto.CreateMeasurementInput
+
+	geminiKey := r.Context().Value("gemini_api_key").(string)
+	geminiModel := r.Context().Value("gemini_model").(string)
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -45,36 +51,59 @@ func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Re
 		json.NewEncoder(w).Encode(error)
 		return
 	}
-	err = json.Unmarshal(body, &measurements)
+	err = json.Unmarshal(body, &measurement)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		error := Error{Message: err.Error()}
 		json.NewEncoder(w).Encode(error)
 		return
 	}
-	var m []entity.Measurement
-	for _, measurement := range measurements {
-		newMeasurement, err := entity.NewMeasurement(
-			measurement.Value,
-			measurement.Image,
-			measurement.Type,
-			measurement.User,
-		)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			error := Error{Message: err.Error()}
-			json.NewEncoder(w).Encode(error)
-			return
-		}
-		m = append(m, *newMeasurement)
+
+	imgReq := dto.ProcessImageRequest{
+		Image: measurement.Image,
 	}
-	err = h.MeasurementDB.Create(&m)
+	imgResp, err := gemini.NewGeminiClient(geminiKey, geminiModel).ProcessImage(r.Context(), imgReq)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		error := Error{Message: err.Error()}
 		json.NewEncoder(w).Encode(error)
 		return
 	}
+	measurement.Value, err = strconv.Atoi(imgResp.Value)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
+		return
+	}
+
+	m, err := entity.NewMeasurement(
+		measurement.Value,
+		measurement.Image,
+		measurement.Type,
+		measurement.User,
+	)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
+		return
+	}
+
+	err = h.MeasurementDB.Create(m)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
+		return
+	}
+
+	protocol := "http"
+	if r.TLS != nil {
+		protocol = "https"
+	}
+	m.Image = fmt.Sprintf("%s://%s%s/%s/image", protocol, r.Host, r.URL.Path, m.ID.String())
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(m)
@@ -272,4 +301,45 @@ func (h *MeasurementHandler) DeleteMeasurement(w http.ResponseWriter, r *http.Re
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Get measurement image	godoc
+// @Summary      			Get a measurement image
+// @Description  			Get a measurement image
+// @Tags         			measurements
+// @Accept       			json
+// @Produce      			json
+// @Param        			id   						path		string		true	"measurement ID"	Format(uuid)
+// @Success      			200  						{file}  	image
+// @Failure      			400  						{object}  	Error
+// @Failure      			404  						{object}  	Error
+// @Router       			/measurements/{id}/image	[get]
+// @Security 				ApiKeyAuth
+func (h *MeasurementHandler) GetMeasurementImage(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		error := Error{Message: "id is required"}
+		json.NewEncoder(w).Encode(error)
+		return
+	}
+	m, err := h.MeasurementDB.FindById(id)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
+		return
+	}
+
+	image, err := base64.StdEncoding.DecodeString(m.Image)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.WriteHeader(http.StatusOK)
+	w.Write(image)
 }
