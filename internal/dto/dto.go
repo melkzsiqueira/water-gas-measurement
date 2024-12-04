@@ -22,3 +22,11 @@ type GetTokenInput struct {
 type GetTokenOutput struct {
 	AccessToken string `json:"access_token"`
 }
+
+type ProcessImageRequest struct {
+	Image string `json:"image"`
+}
+
+type ProcessImageResponse struct {
+	Value string `json:"value"`
+}
