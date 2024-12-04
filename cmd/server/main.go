@@ -51,9 +51,11 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
 	r.Use(middleware.WithValue("token", config.TokenAuth))
 	r.Use(middleware.WithValue("token_expires_in", config.JWTExpiresIn))
+	r.Use(middleware.WithValue("gemini_api_key", config.GeminiKey))
+	r.Use(middleware.WithValue("gemini_model", config.GeminiModel))
+	r.Use(middleware.Recoverer)
 	r.Route("/"+config.APIVersion, func(r chi.Router) {
 		r.Route("/measurements", func(r chi.Router) {
 			r.Use(jwtauth.Verifier(config.TokenAuth))
@@ -61,9 +63,13 @@ func main() {
 
 			r.Post("/", measurementHandler.CreateMeasurement)
 			r.Get("/", measurementHandler.GetMeasurements)
-			r.Get("/{id}", measurementHandler.GetMeasurement)
-			r.Put("/{id}", measurementHandler.UpdateMeasurement)
-			r.Delete("/{id}", measurementHandler.DeleteMeasurement)
+
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", measurementHandler.GetMeasurement)
+				r.Put("/", measurementHandler.UpdateMeasurement)
+				r.Delete("/", measurementHandler.DeleteMeasurement)
+				r.Get("/image", measurementHandler.GetMeasurementImage)
+			})
 		})
 		r.Route("/users", func(r chi.Router) {
 			r.Post("/", userHandler.CreateUser)
