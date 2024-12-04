@@ -252,6 +252,38 @@ paths:
       summary: Update a measurement
       tags:
       - measurements
+  /measurements/{id}/image:
+    get:
+      consumes:
+      - application/json
+      description: Get a measurement image
+      parameters:
+      - description: measurement ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a measurement image
+      tags:
+      - measurements
   /users:
     post:
       consumes:
