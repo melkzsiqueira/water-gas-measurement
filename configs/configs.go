@@ -20,6 +20,8 @@ type conf struct {
 	JWTSecret     string `mapstructure:"JWT_SECRET"`
 	JWTExpiresIn  int    `mapstructure:"JWT_EXPIRES_IN"`
 	APIVersion    string `mapstructure:"API_VERSION"`
+	GeminiKey     string `mapstructure:"GEMINI_API_KEY"`
+	GeminiModel   string `mapstructure:"GEMINI_MODEL"`
 	DBDSN         string
 	SwaggerURL    string
 	TokenAuth     *jwtauth.JWTAuth
