@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -13,16 +12,21 @@ import (
 	"github.com/melkzsiqueira/water-gas-measurement/internal/entity"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/database"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/gemini"
+	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/storage"
 	entityPkg "github.com/melkzsiqueira/water-gas-measurement/pkg/entity"
 )
 
 type MeasurementHandler struct {
-	MeasurementDB database.MeasurementInterface
+	MeasurementDB      database.MeasurementInterface
+	MeasurementStorage storage.MeasurementStorageInterface
+	Gemini             gemini.GeminiInterface
 }
 
-func NewMeasurementHandler(db database.MeasurementInterface) *MeasurementHandler {
+func NewMeasurementHandler(db database.MeasurementInterface, storage storage.MeasurementStorageInterface, gemini gemini.GeminiInterface) *MeasurementHandler {
 	return &MeasurementHandler{
-		MeasurementDB: db,
+		MeasurementDB:      db,
+		MeasurementStorage: storage,
+		Gemini:             gemini,
 	}
 }
 
@@ -41,9 +45,6 @@ func NewMeasurementHandler(db database.MeasurementInterface) *MeasurementHandler
 func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Request) {
 	var measurement dto.CreateMeasurementInput
 
-	geminiKey := r.Context().Value("gemini_api_key").(string)
-	geminiModel := r.Context().Value("gemini_model").(string)
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -60,9 +61,10 @@ func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Re
 	}
 
 	imgReq := dto.ProcessImageRequest{
-		Image: measurement.Image,
+		Data: measurement.Image.Data,
+		Mime: measurement.Image.Mime,
 	}
-	imgResp, err := gemini.NewGeminiClient(geminiKey, geminiModel).ProcessImage(r.Context(), imgReq)
+	imgResp, err := h.Gemini.ProcessImage(imgReq, r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		error := Error{Message: err.Error()}
@@ -77,9 +79,17 @@ func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	s, err := h.MeasurementStorage.UploadFile("data:"+measurement.Image.Mime+";base64,"+measurement.Image.Data, r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
+		return
+	}
+
 	m, err := entity.NewMeasurement(
 		measurement.Value,
-		measurement.Image,
+		s.SecureURL,
 		measurement.Type,
 		measurement.User,
 	)
@@ -97,12 +107,6 @@ func (h *MeasurementHandler) CreateMeasurement(w http.ResponseWriter, r *http.Re
 		json.NewEncoder(w).Encode(error)
 		return
 	}
-
-	protocol := "http"
-	if r.TLS != nil {
-		protocol = "https"
-	}
-	m.Image = fmt.Sprintf("%s://%s%s/%s/image", protocol, r.Host, r.URL.Path, m.ID.String())
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
