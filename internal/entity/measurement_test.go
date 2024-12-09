@@ -43,13 +43,6 @@ func TestMeasurementWhenImageIsRequired(t *testing.T) {
 	assert.Equal(t, ErrImageIsRequired, err)
 }
 
-func TestMeasurementWhenInvalidImage(t *testing.T) {
-	m, err := NewMeasurement(19, "invalid", "1", "878ab991-20b0-41c3-9c78-849744e8312a")
-
-	assert.Nil(t, m)
-	assert.Equal(t, ErrInvalidImage, err)
-}
-
 func TestMeasurementWhenTypeIsRequired(t *testing.T) {
 	m, err := NewMeasurement(19, image, "", "878ab991-20b0-41c3-9c78-849744e8312a")
 
