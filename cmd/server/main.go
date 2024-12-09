@@ -10,6 +10,8 @@ import (
 	_ "github.com/melkzsiqueira/water-gas-measurement/docs"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/entity"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/database"
+	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/gemini"
+	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/storage"
 	"github.com/melkzsiqueira/water-gas-measurement/internal/infra/webserver/handlers"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"gorm.io/driver/postgres"
@@ -42,19 +44,26 @@ func main() {
 		panic(err)
 	}
 	db.AutoMigrate(&entity.Measurement{}, &entity.User{})
-
-	measurementDB := database.NewMeasurement(db)
-	measurementHandler := handlers.NewMeasurementHandler(measurementDB)
-
 	userDB := database.NewUser(db)
 	userHandler := handlers.NewUserHandler(userDB)
+	measurementDB := database.NewMeasurement(db)
+
+	measurementStorage, err := storage.NewStorage(config.StorageName, config.StorageAPIKey, config.StorageAPISecret)
+	if err != nil {
+		panic(err)
+	}
+
+	gemini, err := gemini.NewGeminiClient(config.GeminiKey, config.GeminiModel)
+	if err != nil {
+		panic(err)
+	}
+
+	measurementHandler := handlers.NewMeasurementHandler(measurementDB, measurementStorage, gemini)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.WithValue("token", config.TokenAuth))
 	r.Use(middleware.WithValue("token_expires_in", config.JWTExpiresIn))
-	r.Use(middleware.WithValue("gemini_api_key", config.GeminiKey))
-	r.Use(middleware.WithValue("gemini_model", config.GeminiModel))
 	r.Use(middleware.Recoverer)
 	r.Route("/"+config.APIVersion, func(r chi.Router) {
 		r.Route("/measurements", func(r chi.Router) {
