@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"encoding/base64"
 	"errors"
 	"time"
 
@@ -22,7 +21,6 @@ var (
 	ErrValueIsRequired = errors.New("value is required")
 	ErrInvalidValue    = errors.New("invalid value")
 	ErrImageIsRequired = errors.New("image is required")
-	ErrInvalidImage    = errors.New("invalid image")
 	ErrTypeIsRequired  = errors.New("type is required")
 	ErrInvalidType     = errors.New("invalid type")
 	ErrUserIsRequired  = errors.New("user is required")
@@ -60,10 +58,6 @@ func (m *Measurement) Validate() error {
 
 	if m.Image == "" {
 		return ErrImageIsRequired
-	}
-
-	if _, err := base64.StdEncoding.DecodeString(m.Image); err != nil {
-		return ErrInvalidImage
 	}
 
 	if m.Type == "" {
