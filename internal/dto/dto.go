@@ -1,11 +1,16 @@
 package dto
 
+type CreateMeasurementImageInput struct {
+	Mime string `json:"mime"`
+	Data string `json:"data"`
+}
+
 type CreateMeasurementInput struct {
-	Value     int    `json:"value"`
-	Image     string `json:"image"`
-	Type      string `json:"type"`
-	Confirmed bool   `json:"confirmed"`
-	User      string `json:"user"`
+	Value     int                         `json:"value"`
+	Image     CreateMeasurementImageInput `json:"image"`
+	Type      string                      `json:"type"`
+	Confirmed bool                        `json:"confirmed"`
+	User      string                      `json:"user"`
 }
 
 type CreateUserInput struct {
@@ -24,7 +29,8 @@ type GetTokenOutput struct {
 }
 
 type ProcessImageRequest struct {
-	Image string `json:"image"`
+	Mime string `json:"mime"`
+	Data string `json:"data"`
 }
 
 type ProcessImageResponse struct {
