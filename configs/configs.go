@@ -7,24 +7,27 @@ import (
 )
 
 type conf struct {
-	DBDriver      string `mapstructure:"DB_DRIVER"`
-	DBHost        string `mapstructure:"DB_HOST"`
-	DBPort        string `mapstructure:"DB_PORT"`
-	DBUser        string `mapstructure:"DB_USER"`
-	DBPassword    string `mapstructure:"DB_PASSWORD"`
-	DBName        string `mapstructure:"DB_NAME"`
-	DBSSLMode     string `mapstructure:"DB_SSL_MODE"`
-	DBTimezone    string `mapstructure:"DB_TIMEZONE"`
-	WebServerPort string `mapstructure:"WEB_SERVER_PORT"`
-	WebServerHost string `mapstructure:"WEB_SERVER_HOST"`
-	JWTSecret     string `mapstructure:"JWT_SECRET"`
-	JWTExpiresIn  int    `mapstructure:"JWT_EXPIRES_IN"`
-	APIVersion    string `mapstructure:"API_VERSION"`
-	GeminiKey     string `mapstructure:"GEMINI_API_KEY"`
-	GeminiModel   string `mapstructure:"GEMINI_MODEL"`
-	DBDSN         string
-	SwaggerURL    string
-	TokenAuth     *jwtauth.JWTAuth
+	DBDriver         string `mapstructure:"DB_DRIVER"`
+	DBHost           string `mapstructure:"DB_HOST"`
+	DBPort           string `mapstructure:"DB_PORT"`
+	DBUser           string `mapstructure:"DB_USER"`
+	DBPassword       string `mapstructure:"DB_PASSWORD"`
+	DBName           string `mapstructure:"DB_NAME"`
+	DBSSLMode        string `mapstructure:"DB_SSL_MODE"`
+	DBTimezone       string `mapstructure:"DB_TIMEZONE"`
+	WebServerPort    string `mapstructure:"WEB_SERVER_PORT"`
+	WebServerHost    string `mapstructure:"WEB_SERVER_HOST"`
+	JWTSecret        string `mapstructure:"JWT_SECRET"`
+	JWTExpiresIn     int    `mapstructure:"JWT_EXPIRES_IN"`
+	APIVersion       string `mapstructure:"API_VERSION"`
+	GeminiKey        string `mapstructure:"GEMINI_API_KEY"`
+	GeminiModel      string `mapstructure:"GEMINI_MODEL"`
+	StorageAPIKey    string `mapstructure:"STORAGE_API_KEY"`
+	StorageAPISecret string `mapstructure:"STORAGE_API_SECRET"`
+	StorageName      string `mapstructure:"STORAGE_NAME"`
+	DBDSN            string
+	SwaggerURL       string
+	TokenAuth        *jwtauth.JWTAuth
 }
 
 func LoadConfig(path string) (*conf, error) {
